@@ -1,0 +1,5 @@
+{Testing grammar}
+
+A : B C d | a B;
+B : b B | {e};
+C : c A | {e};
