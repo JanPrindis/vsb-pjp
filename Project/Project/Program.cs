@@ -13,7 +13,7 @@ namespace Project
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
-            string[] tests = { "test1.in", "test2.in", "test3.in", "testErr.in" };
+            string[] tests = { "test1.in", "test2.in", "test3.in", "testErr.in", "testMy.in" };
             //string[] tests = { "testMy.in" };
 
             foreach (var file in tests)

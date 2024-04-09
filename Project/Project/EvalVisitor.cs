@@ -629,5 +629,33 @@ namespace Project
 
             return Visit(context.block()[1]);
         }
+
+        public override (Type Type, object Value) VisitTernaryCondCond(ProjectGrammarParser.TernaryCondCondContext context)
+        {
+            var exprCond = Visit(context.expr()[0]);
+            var exprTrue = Visit(context.expr()[1]);
+            var exprFalse = Visit(context.expr()[2]);
+        
+            if (exprCond.Type != Type.Boolean)
+            {
+                Errors.ReportError(context.expr()[0].start, $"Ternary operator expected boolean, got {exprCond.Type}.");
+                return (Type.Error, 0);
+            }
+
+            if ((exprTrue.Type == Type.Int && exprFalse.Type == Type.Float) ||
+                (exprTrue.Type == Type.Float && exprFalse.Type == Type.Int))
+            {
+                var value =  (bool)exprCond.Value ? ToFloat(exprTrue.Value) : ToFloat(exprFalse.Value);
+                return (Type.Int, value);
+            }
+            
+            if (exprTrue.Type != exprFalse.Type)
+            {
+                Errors.ReportError(context.expr()[0].start, $"Return types must match, got {exprTrue.Type} and {exprFalse.Type}.");
+                return (Type.Error, 0);
+            }
+
+            return (bool)exprCond.Value ? exprTrue : exprFalse;
+        }
     }
 }

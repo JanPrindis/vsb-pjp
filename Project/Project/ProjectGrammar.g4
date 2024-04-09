@@ -31,6 +31,7 @@ expr
     | expr AND expr                     #and
     | expr OR expr                      #or
     | '(' expr ')'                      #parentheses
+    | expr QM expr COLON expr           #ternaryCondCond
     | <assoc=right> ID '=' expr         #assignment
     ;
     
@@ -92,6 +93,8 @@ NOTEQ :     '!=' ;
 AND :       '&&' ;
 OR :        '||' ;
 NOT :       '!' ;
+QM:         '?' ;
+COLON:      ':' ;
 
 // Variable IDs
 ID : [a-zA-Z][a-zA-Z0-9]* ;
