@@ -5,7 +5,7 @@ namespace Project
 {
     public class SymbolTable
     {
-        Dictionary<string, (Type Type, object Value)> memory = new Dictionary<string, (Type Type, object Value)>();
+        Dictionary<string, Type> memory = new Dictionary<string, Type>();
 
         public void Add(IToken variable, Type type)
         {
@@ -21,32 +21,32 @@ namespace Project
                 {
                     case Type.Boolean:
                     {
-                        memory.Add(name, (type, false));
+                        memory.Add(name, type);
                         break;
                     }
 
                     case Type.Int:
                     {
-                        memory.Add(name, (type, 0));
+                        memory.Add(name, type);
                         break;
                     }
 
                     case Type.Float:
                     {
-                        memory.Add(name, (type, 0f));
+                        memory.Add(name, type);
                         break;
                     }
 
                     default:
                     {
-                        memory.Add(name, (type, ""));
+                        memory.Add(name, type);
                         break;
                     }
                 }
             }
         }
 
-        public (Type Type, object Value) this[IToken variable]
+        public Type this[IToken variable]
         {
             get
             {
@@ -58,7 +58,7 @@ namespace Project
                 else
                 {
                     Errors.ReportError(variable, $"Variable {name} was not declared.");
-                    return (Type.Error, 0);
+                    return Type.Error;
                 }
             }
 

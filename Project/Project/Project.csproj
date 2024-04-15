@@ -44,7 +44,8 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Errors.cs" />
-        <Compile Include="EvalVisitor.cs" />
+        <Compile Include="Instruction.cs" />
+        <Compile Include="TreeVisitor.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="SymbolTable.cs" />

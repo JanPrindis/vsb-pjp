@@ -19,6 +19,9 @@ namespace Project
             foreach (var file in tests)
             {
                 string inputFile = File.ReadAllText($"InputFiles/{file}");
+                
+                Console.WriteLine("########################################");
+                Console.WriteLine($"Currently processing file: {file}");
             
                 AntlrInputStream input = new AntlrInputStream(inputFile);
                 ProjectGrammarLexer lexer = new ProjectGrammarLexer(input);
@@ -31,11 +34,19 @@ namespace Project
                 if (parser.NumberOfSyntaxErrors > 0)
                 {
                     Console.WriteLine("error count: {0}", parser.NumberOfSyntaxErrors);
-                    return;
+                    continue;
                 }
 
-                new EvalVisitor().Visit(tree);
-                Console.WriteLine("########################################");
+                var visitor = new TreeVisitor();
+                visitor.Visit(tree);
+
+                if (Errors.NumberOfErrors > 0)
+                {
+                    Errors.PrintAndClearErrors();
+                    continue;
+                }
+                
+                visitor.DumpToFile(file + "-output.txt");
             }
         }
     }

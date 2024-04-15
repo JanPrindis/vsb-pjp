@@ -39,17 +39,11 @@ expr
 cond
     : IF_KW '(' expr ')' stat                   #ifStat
     | IF_KW '(' expr ')' stat ELSE_KW stat      #ifStatElseStat
-    | IF_KW '(' expr ')' stat ELSE_KW block     #ifStatElseBlock
-    | IF_KW '(' expr ')' block                  #ifBlock
-    | IF_KW '(' expr ')' block ELSE_KW stat     #ifBlockElseStat
-    | IF_KW '(' expr ')' block ELSE_KW block    #ifBlockElseBlock
     ;
     
 loop
     : WHILE_KW '(' expr ')' stat                    #whileStat
-    | WHILE_KW '(' expr ')' block                   #whileBlock
     | DO_KW stat WHILE_KW '(' expr ')' (';')+       #doWhileStat
-    | DO_KW block WHILE_KW '(' expr ')' (';')+      #doWhileBlock    
     ;
 
 variableType
