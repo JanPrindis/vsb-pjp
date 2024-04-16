@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using Antlr4.Runtime.Tree;
 
@@ -13,7 +9,7 @@ namespace Project
     {
         private SymbolTable _symbols = new SymbolTable();
         private StringBuilder _instructions = new StringBuilder();
-        private int lastLabel = -1;
+        private int _lastLabel = -1;
 
         public void DumpToFile(string filename)
         {
@@ -25,6 +21,8 @@ namespace Project
             var type = Visit(context.expr());
             // if (type == Type.Error)
             //     Errors.PrintAndClearErrors();
+
+            _instructions.AppendLine(Instruction.Pop);
             
             return Type.Error;
         }
@@ -130,34 +128,59 @@ namespace Project
                     {
                         case ProjectGrammarParser.MUL:
                         {
-                            _instructions.AppendLine(Instruction.Mul);
+                            _instructions.AppendLine(Instruction.Mul(Type.Float));
                             return Type.Float;
                         }
                         case ProjectGrammarParser.DIV:
                         {
-                            _instructions.AppendLine(Instruction.Div);
+                            _instructions.AppendLine(Instruction.Div(Type.Float));
                             return Type.Float;
                         }
                         default:
                             return Type.Error;
                     }
                 }
-                Errors.ReportError(context.start, $"Operator '{context.op.Text}' expected float or int, got {right}.");
-                return Type.Error;
             }
 
-            if (right == Type.Int)
+            if (left == Type.Int && right == Type.Float)
+            {
+                int lastNewLineIndex = _instructions.ToString().Trim().LastIndexOf('\n');
+                int secondLastNewLineIndex = _instructions.ToString().LastIndexOf('\n', lastNewLineIndex - 1);
+                
+                if (secondLastNewLineIndex != -1)
+                {
+                    _instructions.Insert(lastNewLineIndex, Instruction.ItoF);
+                }
+                
+                switch (context.op.Type)
+                {
+                    case ProjectGrammarParser.MUL:
+                    {
+                        _instructions.AppendLine(Instruction.Mul(Type.Float));
+                        return Type.Float;
+                    }
+                    case ProjectGrammarParser.DIV:
+                    {
+                        _instructions.AppendLine(Instruction.Div(Type.Float));
+                        return Type.Float;
+                    }
+                    default:
+                        return Type.Error;
+                }
+            }
+
+            if (left == Type.Int && right == Type.Int)
             {
                 switch (context.op.Type)
                 {
                     case ProjectGrammarParser.MUL:
                     {
-                        _instructions.AppendLine(Instruction.Mul);
+                        _instructions.AppendLine(Instruction.Mul(Type.Int));
                         return Type.Int;
                     }
                     case ProjectGrammarParser.DIV:
                     {
-                        _instructions.AppendLine(Instruction.Div);
+                        _instructions.AppendLine(Instruction.Div(Type.Int));
                         return Type.Int;
                     }
                     case ProjectGrammarParser.MOD:
@@ -175,6 +198,7 @@ namespace Project
         public override Type VisitAddSubConcat(ProjectGrammarParser.AddSubConcatContext context)
         {
             var left = Visit(context.expr()[0]);
+            int afterLeftIndex = _instructions.Length;
             var right = Visit(context.expr()[1]);
 
             if (left == Type.Error || right == Type.Error) return Type.Error;
@@ -214,12 +238,12 @@ namespace Project
                     {
                         case ProjectGrammarParser.ADD:
                         {
-                            _instructions.AppendLine(Instruction.Add);
+                            _instructions.AppendLine(Instruction.Add(Type.Float));
                             return Type.Float;
                         }
                         case ProjectGrammarParser.SUB:
                         {
-                            _instructions.AppendLine(Instruction.Sub);
+                            _instructions.AppendLine(Instruction.Sub(Type.Float));
                             return Type.Float;
                         }
                         default:
@@ -231,18 +255,39 @@ namespace Project
                 return Type.Error;
             }
 
-            if (right == Type.Int)
+            if (left == Type.Int && right == Type.Float)
+            {
+                _instructions.Insert(afterLeftIndex, Instruction.ItoF + "\n");
+                
+                switch (context.op.Type)
+                {
+                    case ProjectGrammarParser.ADD:
+                    {
+                        _instructions.AppendLine(Instruction.Add(Type.Float));
+                        return Type.Float;
+                    }
+                    case ProjectGrammarParser.SUB:
+                    {
+                        _instructions.AppendLine(Instruction.Sub(Type.Float));
+                        return Type.Float;
+                    }
+                    default:
+                        return Type.Error;
+                }   
+            }
+
+            if (left == Type.Int && right == Type.Int)
             {
                 switch (context.op.Type)
                 {
                     case ProjectGrammarParser.ADD:
                     {
-                        _instructions.AppendLine(Instruction.Add);
+                        _instructions.AppendLine(Instruction.Add(Type.Int));
                         return Type.Int;
                     }
                     case ProjectGrammarParser.SUB:
                     {
-                        _instructions.AppendLine(Instruction.Sub);
+                        _instructions.AppendLine(Instruction.Sub(Type.Int));
                         return Type.Int;
                     }
                     default:
@@ -498,11 +543,11 @@ namespace Project
                 _instructions.AppendLine(Instruction.ItoF);
                 _instructions.AppendLine(Instruction.Save(context.ID().GetText()));
                 _instructions.AppendLine(Instruction.Load(context.ID().GetText()));
-                
-                if (!(context.Parent is ProjectGrammarParser.AssignmentContext))
-                {
-                    _instructions.AppendLine(Instruction.Pop);
-                }
+
+                // if (!(context.Parent is ProjectGrammarParser.AssignmentContext))
+                // {
+                //     _instructions.AppendLine(Instruction.Pop);
+                // }
                 
                 return Type.Float;
             }
@@ -512,10 +557,10 @@ namespace Project
             _instructions.AppendLine(Instruction.Save(context.ID().GetText()));
             _instructions.AppendLine(Instruction.Load(context.ID().GetText()));
 
-            if (!(context.Parent is ProjectGrammarParser.AssignmentContext))
-            {
-                _instructions.AppendLine(Instruction.Pop);
-            }
+            // if (!(context.Parent is ProjectGrammarParser.AssignmentContext))
+            // {
+            //     _instructions.AppendLine(Instruction.Pop);
+            // }
 
             return right;
         }
@@ -565,9 +610,9 @@ namespace Project
 
         public override Type VisitWhileStat(ProjectGrammarParser.WhileStatContext context)
         {
-            var startingLabel = lastLabel + 1;
-            var endingLabel = lastLabel + 2;
-            lastLabel = endingLabel;
+            var startingLabel = _lastLabel + 1;
+            var endingLabel = _lastLabel + 2;
+            _lastLabel = endingLabel;
             
             _instructions.AppendLine(Instruction.Label(startingLabel));
             
@@ -589,9 +634,9 @@ namespace Project
 
         public override Type VisitDoWhileStat(ProjectGrammarParser.DoWhileStatContext context)
         {
-            var startingLabel = lastLabel + 1;
-            var endingLabel = lastLabel + 2;
-            lastLabel = endingLabel;
+            var startingLabel = _lastLabel + 1;
+            var endingLabel = _lastLabel + 2;
+            _lastLabel = endingLabel;
             
             _instructions.AppendLine(Instruction.Label(startingLabel));
             Visit(context.stat());
@@ -669,8 +714,8 @@ namespace Project
 
         public override Type VisitIfStat(ProjectGrammarParser.IfStatContext context)
         {
-            var exitLabel = lastLabel + 1;
-            lastLabel = exitLabel;
+            var exitLabel = _lastLabel + 1;
+            _lastLabel = exitLabel;
             
             var expr = Visit(context.expr());
             if (expr != Type.Boolean)
@@ -688,9 +733,9 @@ namespace Project
 
         public override Type VisitIfStatElseStat(ProjectGrammarParser.IfStatElseStatContext context)
         {
-            var falseLabel = lastLabel + 1;
-            var exitLabel = lastLabel + 2;
-            lastLabel = exitLabel;
+            var falseLabel = _lastLabel + 1;
+            var exitLabel = _lastLabel + 2;
+            _lastLabel = exitLabel;
 
             var expr = Visit(context.expr());
             if (expr != Type.Boolean)

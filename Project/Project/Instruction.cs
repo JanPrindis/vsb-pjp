@@ -4,10 +4,41 @@ namespace Project
 {
     public static class Instruction
     {
-        public static string Add => "add";
-        public static string Sub => "sub";
-        public static string Mul => "mul";
-        public static string Div => "div";
+        public static string Add(Type type)
+        {
+            if (type == Type.Int)
+                return "add I";
+            if (type == Type.Float)
+                return "add F";
+            return "add";
+        }
+
+        public static string Sub(Type type)
+        {
+            if (type == Type.Int)
+                return "sub I";
+            if (type == Type.Float)
+                return "sub F";
+            return "sub";
+        }
+
+        public static string Mul(Type type)
+        {
+            if (type == Type.Int)
+                return "mul I";
+            if (type == Type.Float)
+                return "mul F";
+            return "mul";
+        }
+
+        public static string Div(Type type)
+        {
+            if (type == Type.Int)
+                return "div I";
+            if (type == Type.Float)
+                return "div F";
+            return "div";
+        }
         public static string Mod => "mod";
         public static string Uminus => "uminus";
         public static string Concat => "concat";

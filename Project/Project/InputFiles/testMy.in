@@ -1,24 +1,7 @@
-﻿int i;
-i = 5 > (4 + 4) ? 1 : 2;
-write "i = ", i;
+﻿1 + 2;
 
-i = 5 < (4 + 4) ? 1 : 2;
-write "i = ", i;
+1 + 2.2;
 
-// Int, float check
-float f;
-f = true ? 1 : 0.5;
-write "true f = ", f;
-f = false ? 1 : 0.5;
-write "false f = ", f;
+1 + 2 * 3.3;
 
-// Assignment error
-i = 5 > (4 + 4) ? true : false;
-i = true ? 1 : 0.5;
-
-// Condition not boolean
-bool b;
-b = 5 + 4 ? true : false;
-
-// Return types not same
-b = true ? true : "Hello";
+(1 + 2) * 3.3;
