@@ -46,7 +46,10 @@ namespace Project
                     continue;
                 }
                 
-                visitor.DumpToFile(file + "-output.txt");
+                //visitor.DumpToFile(file + "-output.txt");
+
+                VirtualMachine vm = new VirtualMachine(visitor.GetCodeString());
+                vm.Run();
             }
         }
     }

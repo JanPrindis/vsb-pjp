@@ -15,13 +15,15 @@ namespace Project
         {
             File.WriteAllText(filename, _instructions.ToString().Trim());
         }
+
+        public string GetCodeString()
+        {
+            return _instructions.ToString();
+        }
         
         public override Type VisitExpression(ProjectGrammarParser.ExpressionContext context)
         {
             var type = Visit(context.expr());
-            // if (type == Type.Error)
-            //     Errors.PrintAndClearErrors();
-
             _instructions.AppendLine(Instruction.Pop);
             
             return Type.Error;
@@ -102,6 +104,7 @@ namespace Project
         public override Type VisitMulDivMod(ProjectGrammarParser.MulDivModContext context)
         {
             var left = Visit(context.expr()[0]);
+            int afterLeftIndex = _instructions.Length;
             var right = Visit(context.expr()[1]);
 
             if (left == Type.Error || right == Type.Error) return Type.Error;
@@ -144,14 +147,7 @@ namespace Project
 
             if (left == Type.Int && right == Type.Float)
             {
-                int lastNewLineIndex = _instructions.ToString().Trim().LastIndexOf('\n');
-                int secondLastNewLineIndex = _instructions.ToString().LastIndexOf('\n', lastNewLineIndex - 1);
-                
-                if (secondLastNewLineIndex != -1)
-                {
-                    _instructions.Insert(lastNewLineIndex, Instruction.ItoF);
-                }
-                
+                _instructions.Insert(afterLeftIndex, Instruction.ItoF + "\n\r");
                 switch (context.op.Type)
                 {
                     case ProjectGrammarParser.MUL:
@@ -257,7 +253,7 @@ namespace Project
 
             if (left == Type.Int && right == Type.Float)
             {
-                _instructions.Insert(afterLeftIndex, Instruction.ItoF + "\n");
+                _instructions.Insert(afterLeftIndex, Instruction.ItoF + "\n\r");
                 
                 switch (context.op.Type)
                 {
@@ -386,6 +382,7 @@ namespace Project
         public override Type VisitLtGt(ProjectGrammarParser.LtGtContext context)
         {
             var left = Visit(context.expr()[0]);
+            int afterLeftIndex = _instructions.Length;
             var right = Visit(context.expr()[1]);
 
             if (left == Type.Error || right == Type.Error) return Type.Error;
@@ -412,13 +409,7 @@ namespace Project
 
             if (left == Type.Int && right == Type.Float)
             {
-                int lastNewLineIndex = _instructions.ToString().Trim().LastIndexOf('\n');
-                int secondLastNewLineIndex = _instructions.ToString().LastIndexOf('\n', lastNewLineIndex - 1);
-                
-                if (secondLastNewLineIndex != -1)
-                {
-                    _instructions.Insert(lastNewLineIndex, Instruction.ItoF);
-                }
+                _instructions.Insert(afterLeftIndex, Instruction.ItoF + "\n\r");
                 _instructions.AppendLine(context.op.Type == ProjectGrammarParser.LT ? Instruction.Lt : Instruction.Gt);
                 return Type.Boolean;
             }
@@ -544,11 +535,6 @@ namespace Project
                 _instructions.AppendLine(Instruction.Save(context.ID().GetText()));
                 _instructions.AppendLine(Instruction.Load(context.ID().GetText()));
 
-                // if (!(context.Parent is ProjectGrammarParser.AssignmentContext))
-                // {
-                //     _instructions.AppendLine(Instruction.Pop);
-                // }
-                
                 return Type.Float;
             }
 
@@ -556,11 +542,6 @@ namespace Project
             
             _instructions.AppendLine(Instruction.Save(context.ID().GetText()));
             _instructions.AppendLine(Instruction.Load(context.ID().GetText()));
-
-            // if (!(context.Parent is ProjectGrammarParser.AssignmentContext))
-            // {
-            //     _instructions.AppendLine(Instruction.Pop);
-            // }
 
             return right;
         }
@@ -702,10 +683,7 @@ namespace Project
             foreach (var expr in context.expr())
             {
                 var value = Visit(expr);
-                // if (value != Type.Error)
-                //     Console.Write(value);
             }
-            //Console.WriteLine();
 
             _instructions.AppendLine(Instruction.Print(context.expr().Length));
             

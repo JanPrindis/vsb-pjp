@@ -51,6 +51,7 @@
         <Compile Include="SymbolTable.cs" />
         <Compile Include="Type.cs" />
         <Compile Include="VerboseListener.cs" />
+        <Compile Include="VirtualMachine.cs" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="InputFiles\test1.in">
